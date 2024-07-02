@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AppTest {
     @Test void appHasAGreeting() {
-        httpClient classUnderTest = new HttpClient();
+        HttpClient classUnderTest = new HttpClient();
         //assertNotNull(classUnderTest.someMethod(), "returns some value");
     }
 }
