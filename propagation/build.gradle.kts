@@ -23,6 +23,16 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+
+    implementation(platform("io.opentelemetry:opentelemetry-bom:1.39.0"))
+    //implementation("io.opentelemetry:opentelemetry-api")
+    //implementation("io.opentelemetry:opentelemetry-sdk")
+    implementation("io.opentelemetry:opentelemetry-exporter-logging:1.39.0")
+
+    //alpha modules
+    implementation("io.opentelemetry:opentelemetry-semconv:1.30.1-alpha")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.39.0")
+    implementation("io.opentelemetry:opentelemetry-api-incubator:1.39.0-alpha")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
