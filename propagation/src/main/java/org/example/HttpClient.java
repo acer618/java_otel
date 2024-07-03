@@ -108,7 +108,7 @@ public final class HttpClient {
             () -> {
               while (true) {
                 try {
-                  Thread.sleep(5000);
+                  Thread.sleep(1000);
                 } catch (Exception e) {
                   System.out.println(e.getMessage());
                 }

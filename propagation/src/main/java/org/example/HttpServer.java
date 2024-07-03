@@ -50,6 +50,7 @@ public final class HttpServer {
     public void handle(HttpExchange exchange) throws IOException {
       // TODO (trask) clean up chaining after
       // https://github.com/open-telemetry/opentelemetry-java/pull/6514
+      System.out.println("handle...");
       ((ExtendedSpanBuilder)
               ((ExtendedSpanBuilder) tracer.spanBuilder("GET /"))
                   .setParentFrom(
@@ -80,6 +81,7 @@ public final class HttpServer {
 
     private void answer(HttpExchange exchange, Span span) throws IOException {
       // Generate an Event
+      System.out.println("answer...");
       span.addEvent("Start Processing");
 
       // Process the request

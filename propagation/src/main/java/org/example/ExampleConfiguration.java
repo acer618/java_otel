@@ -9,9 +9,13 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import java.util.concurrent.TimeUnit;
 
 /**
  * All SDK management takes place here, away from the instrumentation code, which should only access
@@ -20,15 +24,26 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 class ExampleConfiguration {
 
   /**
-   * Initializes the OpenTelemetry SDK with a logging span exporter and the W3C Trace Context
+   * Initializes the OpenTelemetry SDK with
+   * 1. logging span exporter and the W3C Trace Context
    * propagator.
-   *
+   * 2. Jaeger OTLP Exporter
    * @return A ready-to-use {@link OpenTelemetry} instance.
    */
   static OpenTelemetry initOpenTelemetry() {
+
+    String jaegerEndpoint = "http://localhost:4318";
+    // Export traces to Jaeger over OTLP
+    OtlpGrpcSpanExporter jaegerOtlpExporter =
+            OtlpGrpcSpanExporter.builder()
+                    .setEndpoint(jaegerEndpoint)
+                    .setTimeout(30, TimeUnit.SECONDS)
+                    .build();
+
     SdkTracerProvider sdkTracerProvider =
         SdkTracerProvider.builder()
             .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+            .addSpanProcessor(BatchSpanProcessor.builder(jaegerOtlpExporter).build())
             .build();
 
     OpenTelemetrySdk sdk =
