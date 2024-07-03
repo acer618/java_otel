@@ -1,6 +1,6 @@
 # java_otel
 
-## Subprojects:
+## Subprojects
 
 ### Propagation
   - Manual Instrumentation, Exports to Jaeger (localhost:4318)
