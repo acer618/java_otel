@@ -1,6 +1,6 @@
 # java_otel
 
-## Example subprojects:
+## Subprojects:
 
 - Propagation
   - Manual Instrumentation 
