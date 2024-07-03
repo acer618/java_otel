@@ -10,7 +10,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -36,8 +36,8 @@ class ExampleConfiguration {
 
     String jaegerEndpoint = "http://localhost:4318";
     // Export traces to Jaeger over OTLP
-    OtlpGrpcSpanExporter jaegerOtlpExporter =
-            OtlpGrpcSpanExporter.builder()
+    OtlpHttpSpanExporter jaegerOtlpExporter =
+            OtlpHttpSpanExporter.builder()
                     .setEndpoint(jaegerEndpoint)
                     .setTimeout(30, TimeUnit.SECONDS)
                     .build();
