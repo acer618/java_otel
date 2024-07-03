@@ -81,7 +81,7 @@ public final class HttpServer {
 
     private void answer(HttpExchange exchange, Span span) throws IOException {
       // Generate an Event
-      System.out.println("answer...");
+      System.out.println("Start Processing...");
       span.addEvent("Start Processing");
 
       // Process the request
