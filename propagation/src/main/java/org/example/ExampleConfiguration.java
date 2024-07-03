@@ -34,7 +34,7 @@ class ExampleConfiguration {
    */
   static OpenTelemetry initOpenTelemetry() {
 
-    String jaegerEndpoint = "http://localhost:4318";
+    String jaegerEndpoint = System.getProperty("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
     // Export traces to Jaeger over OTLP
     OtlpHttpSpanExporter jaegerOtlpExporter =
             OtlpHttpSpanExporter.builder()

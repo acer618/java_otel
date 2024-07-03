@@ -29,7 +29,7 @@ public final class HttpServer {
   private static final Tracer tracer =
       openTelemetry.getTracer("io.opentelemetry.example.http.HttpServer");
 
-  private static final int port = 8083;
+  private static final int port = Integer.parseInt(System.getProperty("SERVER_PORT"));
   private final com.sun.net.httpserver.HttpServer server;
 
   private HttpServer() throws IOException {
