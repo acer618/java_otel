@@ -15,11 +15,20 @@ import io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+
+import io.opentelemetry.context.propagation.TextMapGetter;
+import org.example.propagation.B3Propagator;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class HttpServer {
@@ -31,6 +40,20 @@ public final class HttpServer {
 
   private static final int port = Integer.parseInt(System.getProperty("SERVER_PORT"));
   private final com.sun.net.httpserver.HttpServer server;
+
+  private static final TextMapGetter<Map<String, String>> TEXT_MAP_GETTER =
+          new TextMapGetter<Map<String, String>>() {
+            @Override
+            public Set<String> keys(Map<String, String> carrier) {
+              return carrier.keySet();
+            }
+
+            @Override
+            @Nullable
+            public String get(@Nullable Map<String, String> carrier, String key) {
+              return carrier == null ? null : carrier.get(key);
+            }
+          };
 
   private HttpServer() throws IOException {
     this(port);
@@ -50,13 +73,16 @@ public final class HttpServer {
     public void handle(HttpExchange exchange) throws IOException {
       // TODO (trask) clean up chaining after
       // https://github.com/open-telemetry/opentelemetry-java/pull/6514
-      System.out.println("handle...");
+
+      Map<String, String> headersMap = exchange.getRequestHeaders().entrySet().stream()
+              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
+      System.out.println(headersMap);
+
+      ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
+      Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
       ((ExtendedSpanBuilder)
               ((ExtendedSpanBuilder) tracer.spanBuilder("GET /"))
-                  .setParentFrom(
-                      openTelemetry.getPropagators(),
-                      exchange.getRequestHeaders().entrySet().stream()
-                          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0))))
+                  .setParent(context)
                   .setSpanKind(SpanKind.SERVER))
           .startAndRun(
               () -> {
@@ -64,18 +90,12 @@ public final class HttpServer {
                 Span span = Span.current();
                 span.setAttribute("component", "http");
                 span.setAttribute("http.method", "GET");
-                /*
-                 One of the following is required:
-                 - http.scheme, http.host, http.target
-                 - http.scheme, http.server_name, net.host.port, http.target
-                 - http.scheme, net.host.name, net.host.port, http.target
-                 - http.url
-                */
                 span.setAttribute("http.scheme", "http");
                 span.setAttribute("http.host", "localhost:" + HttpServer.port);
                 span.setAttribute("http.target", "/");
                 // Process the request
                 answer(exchange, span);
+                System.out.println(span);
               });
     }
 

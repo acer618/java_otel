@@ -48,7 +48,7 @@ class ExampleConfiguration {
     SdkTracerProvider sdkTracerProvider =
         SdkTracerProvider.builder()
             .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
-            .addSpanProcessor(BatchSpanProcessor.builder(jaegerOtlpExporter).build())
+            //.addSpanProcessor(BatchSpanProcessor.builder(jaegerOtlpExporter).build())
             .setResource(Resource.getDefault().merge(serviceNameResource))
             .build();
 

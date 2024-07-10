@@ -6,17 +6,17 @@
 
 package org.example;
 
-import io.opentelemetry.extension.trace.propagation.B3Propagator;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.propagation.ExtendedContextPropagators;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import org.example.propagation.B3Propagator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,6 +26,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class HttpClient {
 
@@ -72,17 +74,27 @@ public final class HttpClient {
       span.setAttribute("url.full", url.toString());
 
       // Inject the request with the current Context/Span.
-      //ExtendedContextPropagators.getTextMapPropagationContext(openTelemetry.getPropagators())
-      //    .forEach(con::setRequestProperty);
-
       ContextPropagators contextPropagators =
               ContextPropagators.create(
                       TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
 
       // Inject the request with the current Context/Span.
-      //ExtendedContextPropagators.getTextMapPropagationContext(contextPropagators)
+      Map<String, String> carrier = new HashMap<>();
+      contextPropagators
+              .getTextMapPropagator()
+              .inject(
+                      Context.current(),
+                      carrier,
+                      (map, key, value) -> {
+                        if (map != null) {
+                          map.put(key, value);
+                          System.out.println(key + ":" + value);
+                        }
+                      });
+      carrier.forEach(con::setRequestProperty);
+      //Use this instead of above code. ^^ did this for debugging
+      // ExtendedContextPropagators.getTextMapPropagationContext(contextPropagators)
       //        .forEach(con::setRequestProperty);
-      con.setRequestProperty("X-B3-Trace-Id", "1");
 
       try {
         // Process the request
