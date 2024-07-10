@@ -32,6 +32,8 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-exporter-logging:1.39.0")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.39.0")
 
+    implementation("io.opentelemetry:opentelemetry-extension-trace-propagators:1.39.0");
+
     //alpha modules
     implementation("io.opentelemetry:opentelemetry-semconv:1.30.1-alpha")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.39.0")
