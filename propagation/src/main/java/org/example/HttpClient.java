@@ -6,6 +6,7 @@
 
 package org.example;
 
+import io.opentelemetry.api.incubator.propagation.ExtendedContextPropagators;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -26,8 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public final class HttpClient {
 
@@ -52,13 +52,7 @@ public final class HttpClient {
     try (Scope scope = span.makeCurrent()) {
       span.setAttribute("http.method", "GET");
       span.setAttribute("component", "http");
-      /*
-       Only one of the following is required
-         - http.url
-         - http.scheme, http.host, http.target
-         - http.scheme, peer.hostname, peer.port, http.target
-         - http.scheme, peer.ip, peer.port, http.target
-      */
+
       URI uri = url.toURI();
       url =
           new URI(
@@ -79,6 +73,7 @@ public final class HttpClient {
                       TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
 
       // Inject the request with the current Context/Span.
+      /*
       Map<String, String> carrier = new HashMap<>();
       contextPropagators
               .getTextMapPropagator()
@@ -92,9 +87,11 @@ public final class HttpClient {
                         }
                       });
       carrier.forEach(con::setRequestProperty);
+      */
+
       //Use this instead of above code. ^^ did this for debugging
-      // ExtendedContextPropagators.getTextMapPropagationContext(contextPropagators)
-      //        .forEach(con::setRequestProperty);
+      ExtendedContextPropagators.getTextMapPropagationContext(contextPropagators)
+              .forEach(con::setRequestProperty);
 
       try {
         // Process the request
