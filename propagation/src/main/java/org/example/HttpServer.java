@@ -78,6 +78,10 @@ public final class HttpServer {
               .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
       //System.out.println(headersMap);
 
+        /*
+            TODO: Inject both W3Trace and this custom B3 propagator. If W3cTracePropagator has nothing to extract (zipkin headers came from a zipkin server)
+            then use the custom Zipkin Propagator to extract B3 headers
+         */
       ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
       Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
 
