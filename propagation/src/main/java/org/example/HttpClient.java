@@ -90,6 +90,10 @@ public final class HttpClient {
       */
 
       //Use this instead of above code. ^^ did this for debugging
+      /*
+         TODO:
+         Otel instrumented services should propagate both W3CTraceContext and X-B3 headers.
+      */
       ExtendedContextPropagators.getTextMapPropagationContext(contextPropagators)
               .forEach(con::setRequestProperty);
 
