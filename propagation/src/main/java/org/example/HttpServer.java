@@ -71,26 +71,32 @@ public final class HttpServer {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-      // TODO (task) clean up chaining after
-      // https://github.com/open-telemetry/opentelemetry-java/pull/6514
 
       Map<String, String> headersMap = exchange.getRequestHeaders().entrySet().stream()
               .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
       //System.out.println(headersMap);
 
         /*
-            TODO: Inject both W3Trace and this custom B3 propagator. If W3cTracePropagator has nothing to extract (zipkin headers came from a zipkin server)
-            then use the custom Zipkin Propagator to extract B3 headers
+            TODO: 
+            A Composite Propagator is needed with both W3cTracePropagator and B3Propagator. 
+            It should be be able to handle incoming requests from both Zipkin and Otel instrumented services correctly to build context.
+            An otel instrumented service will send both X-B3 and W3cTrace headers. 
+            - In such a case does the order of execution matter?
+            - Should the B3Propagator do a noop?
+            - Or maybe they should both extract in the same manner so the result of the Context is the same and the order of execution won't matter.
          */
       ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
       Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
 
       /*
-         Issue: This creates a SERVER span by invoking startSpan() here
+         TODO: 
+         The code below creates a SERVER span by invoking startSpan() here:
          https://github.com/open-telemetry/opentelemetry-java/blob/3fa57f9280ff73bc74525f0e773eaef9b2ab9489/sdk/trace/src/main/java/io/opentelemetry/sdk/trace/SdkSpanBuilder.java#L190
-         The problem is based on otel spec new span id will get created but based on X-B3 zipkin headers the spanId needs to be shared with the remote client span id. Note SdkSpanBuilder is a final class
-         Also https://github.com/open-telemetry/opentelemetry-java/blob/3fa57f9280ff73bc74525f0e773eaef9b2ab9489/sdk/trace/src/main/java/io/opentelemetry/sdk/trace/SdkTracerProvider.java#L28
-         A new implementation for TraceProvider and SDKSpanBuilder will be needed but there might be other related classes
+         The problem is based on the otel spec new span id will get created but based on X-B3 zipkin headers the spanId needs to be shared with the remote client span id.
+         A new implementation for TraceProvider and SDKSpanBuilder will be needed but there might be other related classes that might have to be implemented.
+         Alternative can we do this intead? (aligns with the otel spec and we might be able to see the traces fine in Jaeger)
+         span_id= generateNewId()
+         parent_span_id = x-b3-span-id
        */
       ((ExtendedSpanBuilder)
               ((ExtendedSpanBuilder) tracer.spanBuilder("GET /"))
