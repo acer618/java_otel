@@ -71,15 +71,23 @@ public final class HttpServer {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-      // TODO (trask) clean up chaining after
+      // TODO (task) clean up chaining after
       // https://github.com/open-telemetry/opentelemetry-java/pull/6514
 
       Map<String, String> headersMap = exchange.getRequestHeaders().entrySet().stream()
               .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
-      System.out.println(headersMap);
+      //System.out.println(headersMap);
 
       ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
       Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
+
+      /*
+         Issue: This creates a SERVER span by invoking startSpan() here
+         https://github.com/open-telemetry/opentelemetry-java/blob/3fa57f9280ff73bc74525f0e773eaef9b2ab9489/sdk/trace/src/main/java/io/opentelemetry/sdk/trace/SdkSpanBuilder.java#L190
+         The problem is based on otel spec new span id will get created but based on X-B3 zipkin headers the spanId needs to be shared with the remote client span id. Note SdkSpanBuilder is a final class
+         Also https://github.com/open-telemetry/opentelemetry-java/blob/3fa57f9280ff73bc74525f0e773eaef9b2ab9489/sdk/trace/src/main/java/io/opentelemetry/sdk/trace/SdkTracerProvider.java#L28
+         A new implementation for TraceProvider and SDKSpanBuilder will be needed but there might be other related classes
+       */
       ((ExtendedSpanBuilder)
               ((ExtendedSpanBuilder) tracer.spanBuilder("GET /"))
                   .setParent(context)

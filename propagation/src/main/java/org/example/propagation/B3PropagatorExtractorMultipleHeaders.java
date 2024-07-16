@@ -40,9 +40,16 @@ final class B3PropagatorExtractorMultipleHeaders implements B3PropagatorExtracto
       return Optional.empty();
     }
 
+
     String spanId = getter.get(carrier, B3Propagator.SPAN_ID_HEADER);
     if (!Common.isSpanIdValid(spanId)) {
       logger.fine("Invalid SpanId in B3 header: " + spanId + "'. Returning INVALID span context.");
+      return Optional.empty();
+    }
+
+    String parentSpanId = getter.get(carrier, B3Propagator.PARENT_SPAN_ID_HEADER);
+    if (!Common.isSpanIdValid(parentSpanId)) {
+      logger.fine("Invalid Parent SpanId in B3 header: " + parentSpanId + "'. Returning INVALID span context.");
       return Optional.empty();
     }
 
@@ -52,10 +59,10 @@ final class B3PropagatorExtractorMultipleHeaders implements B3PropagatorExtracto
       return Optional.of(
           context
               .with(B3Propagator.DEBUG_CONTEXT_KEY, true)
-              .with(Span.wrap(Common.buildSpanContext(traceId, spanId, Common.TRUE_INT))));
+              .with(Span.wrap(Common.buildSpanContext(traceId, parentSpanId, Common.TRUE_INT))));
     }
 
     String sampled = getter.get(carrier, B3Propagator.SAMPLED_HEADER);
-    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, spanId, sampled))));
+    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, parentSpanId, sampled))));
   }
 }

@@ -43,6 +43,7 @@ public final class B3Propagator implements TextMapPropagator {
   // Hack: Had to change these because the HttpServer exchange message always has an upper case X
   static final String TRACE_ID_HEADER = "X-b3-traceid";
   static final String SPAN_ID_HEADER = "X-b3-spanid";
+  static final String PARENT_SPAN_ID_HEADER = "X-b3-parent-spanid";
   static final String SAMPLED_HEADER = "X-b3-sampled";
   static final String DEBUG_HEADER = "X-b3-flags";
 

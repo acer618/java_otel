@@ -5,10 +5,6 @@
 
 package org.example.propagation;
 
-import static org.example.propagation.B3Propagator.SAMPLED_HEADER;
-import static org.example.propagation.B3Propagator.SPAN_ID_HEADER;
-import static org.example.propagation.B3Propagator.TRACE_ID_HEADER;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -20,10 +16,12 @@ import java.util.Collections;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import static org.example.propagation.B3Propagator.*;
+
 @Immutable
 final class B3PropagatorInjectorMultipleHeaders implements B3PropagatorInjector {
   private static final Collection<String> FIELDS =
-      Collections.unmodifiableList(Arrays.asList(TRACE_ID_HEADER, SPAN_ID_HEADER, SAMPLED_HEADER));
+      Collections.unmodifiableList(Arrays.asList(TRACE_ID_HEADER, PARENT_SPAN_ID_HEADER, SPAN_ID_HEADER, SAMPLED_HEADER));
 
   @Override
   public <C> void inject(Context context, @Nullable C carrier, TextMapSetter<C> setter) {
@@ -47,6 +45,11 @@ final class B3PropagatorInjectorMultipleHeaders implements B3PropagatorInjector 
     }
 
     setter.set(carrier, TRACE_ID_HEADER, spanContext.getTraceId());
+
+    // Issue # 1. SpanContext interface does not have getParentId
+    // https://github.com/open-telemetry/opentelemetry-java/blob/3fa57f9280ff73bc74525f0e773eaef9b2ab9489/api/all/src/main/java/io/opentelemetry/api/trace/SpanContext.java#L27
+    //setter.set(carrier, PARENT_SPAN_ID_HEADER, spanContext.getParentId());
+
     setter.set(carrier, SPAN_ID_HEADER, spanContext.getSpanId());
     setter.set(carrier, SAMPLED_HEADER, sampled);
   }
