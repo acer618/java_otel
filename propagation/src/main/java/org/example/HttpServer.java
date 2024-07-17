@@ -15,6 +15,7 @@ import io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -74,7 +75,7 @@ public final class HttpServer {
 
       Map<String, String> headersMap = exchange.getRequestHeaders().entrySet().stream()
               .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
-      //System.out.println(headersMap);
+      System.out.println(headersMap);
 
         /*
             TODO: 

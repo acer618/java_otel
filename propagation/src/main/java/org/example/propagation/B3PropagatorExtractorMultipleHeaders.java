@@ -47,11 +47,15 @@ final class B3PropagatorExtractorMultipleHeaders implements B3PropagatorExtracto
       return Optional.empty();
     }
 
+    /*
+     Ignoring this for now. Because otel libs might have a hard time both injecting and extracing parent span id
+     Let the otel receiver use span id as its parent and generate a new span id for its server span
+
     String parentSpanId = getter.get(carrier, B3Propagator.PARENT_SPAN_ID_HEADER);
     if (!Common.isSpanIdValid(parentSpanId)) {
       logger.fine("Invalid Parent SpanId in B3 header: " + parentSpanId + "'. Returning INVALID span context.");
       return Optional.empty();
-    }
+    } */
 
     // if debug flag is set, then set sampled flag, and also set B3 debug to true in the context
     // for onward use by B3 injector
@@ -59,10 +63,10 @@ final class B3PropagatorExtractorMultipleHeaders implements B3PropagatorExtracto
       return Optional.of(
           context
               .with(B3Propagator.DEBUG_CONTEXT_KEY, true)
-              .with(Span.wrap(Common.buildSpanContext(traceId, parentSpanId, Common.TRUE_INT))));
+              .with(Span.wrap(Common.buildSpanContext(traceId, spanId, Common.TRUE_INT))));
     }
 
     String sampled = getter.get(carrier, B3Propagator.SAMPLED_HEADER);
-    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, parentSpanId, sampled))));
+    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, spanId, sampled))));
   }
 }
