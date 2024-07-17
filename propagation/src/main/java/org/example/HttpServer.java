@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,17 +78,25 @@ public final class HttpServer {
               .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
       System.out.println(headersMap);
 
+      //Solve this in a better way. Why do all headers start with an uppercase character?
+      if (headersMap.containsKey("Traceparent")) {
+          headersMap.put("traceparent", headersMap.get("Traceparent"));
+        }
+
         /*
-            TODO: 
-            A Composite Propagator is needed with both W3cTracePropagator and B3Propagator. 
-            It should be be able to handle incoming requests from both Zipkin and Otel instrumented services correctly to build context.
-            An otel instrumented service will send both X-B3 and W3cTrace headers. 
-            - In such a case does the order of execution matter?
-            - Should the B3Propagator do a noop?
-            - Or maybe they should both extract in the same manner so the result of the Context is the same and the order of execution won't matter.
+            TODO:
+            Verify that a Composite Propagator with W3cTracePropagator and B3Propagator will work and the order won't matter
+            as long as both extractors set context the same way:
+
+            W3cTracePropagator
+            - span_id = spanid from tracestate header
+
+            B3Propagator
+            - span_id = x-b3-span-id header
+
          */
-      ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
-      Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
+        ContextPropagators contextPropagators = ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), B3Propagator.injectingMultiHeaders()));
+        Context context = contextPropagators.getTextMapPropagator().extract(Context.current(), headersMap, TEXT_MAP_GETTER );
 
       /*
          TODO: 
@@ -97,7 +106,7 @@ public final class HttpServer {
          
          A new implementation for TraceProvider and SDKSpanBuilder may be needed but there might be other related classes that might have to be implemented.
          
-         Alternative: Can we do this intead? (aligns with the otel spec and we might be able to see the traces fine in Jaeger)
+         Alternative: Can we do this instead? (aligns with the otel spec and we might be able to see the traces fine in Jaeger)
          span_id= generateNewId()
          parent_span_id = x-b3-span-id
        */

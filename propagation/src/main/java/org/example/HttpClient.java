@@ -7,6 +7,7 @@
 package org.example;
 
 import io.opentelemetry.api.incubator.propagation.ExtendedContextPropagators;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -40,7 +41,7 @@ public final class HttpClient {
   private static final int port = Integer.parseInt(System.getProperty("SERVER_PORT"));
 
   private void makeRequest() throws IOException, URISyntaxException {
-    URL url = new URL("http://127.0.0.1:" + port);
+    URL url = new URL("http://127.0.0.1:" + port + "/rolldice");
     HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
     int status = 0;
@@ -70,7 +71,7 @@ public final class HttpClient {
       // Inject the request with the current Context/Span.
       ContextPropagators contextPropagators =
               ContextPropagators.create(
-                      TextMapPropagator.composite(B3Propagator.injectingMultiHeaders()));
+                      TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), B3Propagator.injectingMultiHeaders()));
 
       // Inject the request with the current Context/Span.
       /*
